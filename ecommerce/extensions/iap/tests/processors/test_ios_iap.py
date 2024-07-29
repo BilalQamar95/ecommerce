@@ -9,7 +9,7 @@ import ddt
 import mock
 from django.test import RequestFactory
 from django.urls import reverse
-from oscar.apps.payment.exceptions import GatewayError, PaymentError
+from oscar.apps.payment.exceptions import GatewayError, PaymentError, UserCancelled
 from oscar.core.loading import get_model
 from testfixtures import LogCapture
 
@@ -181,6 +181,19 @@ class IOSIAPTests(PaymentProcessorTestCaseMixin, TestCase):
         modified_validation_response['receipt']['in_app'][2].pop('original_transaction_id')
         mock_ios_validator.return_value = modified_validation_response
         with self.assertRaises(PaymentError):
+            modified_return_data = self.RETURN_DATA
+
+            self.processor.handle_processor_response(modified_return_data, basket=self.basket)
+
+    @mock.patch.object(IOSValidator, 'validate')
+    def test_handle_cancelled_payment_error(self, mock_ios_validator):
+        """
+        Verify that User cancelled exception is raised in presence of cancellation_reason parameter.
+        """
+        modified_validation_response = self.mock_validation_response
+        modified_validation_response['receipt']['in_app'][2]['cancellation_reason'] = 0
+        mock_ios_validator.return_value = modified_validation_response
+        with self.assertRaises(UserCancelled):
             modified_return_data = self.RETURN_DATA
 
             self.processor.handle_processor_response(modified_return_data, basket=self.basket)
