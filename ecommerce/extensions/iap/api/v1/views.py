@@ -17,7 +17,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from oscar.apps.basket.views import *  # pylint: disable=wildcard-import, unused-wildcard-import
-from oscar.apps.payment.exceptions import GatewayError, PaymentError
+from oscar.apps.payment.exceptions import GatewayError, PaymentError, UserCancelled
 from oscar.core.loading import get_class, get_model
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -51,6 +51,7 @@ from ecommerce.extensions.iap.api.v1.constants import (
     ERROR_ORDER_NOT_FOUND_FOR_REFUND,
     ERROR_REFUND_NOT_COMPLETED,
     ERROR_TRANSACTION_NOT_FOUND_FOR_REFUND,
+    ERROR_USER_CANCELLED_PAYMENT,
     FOUND_MULTIPLE_PRODUCTS_ERROR,
     GOOGLE_PUBLISHER_API_SCOPE,
     IGNORE_NON_REFUND_NOTIFICATION_FROM_APPLE,
@@ -60,6 +61,7 @@ from ecommerce.extensions.iap.api.v1.constants import (
     LOGGER_BASKET_NOT_FOUND,
     LOGGER_CHECKOUT_ERROR,
     LOGGER_EXECUTE_ALREADY_PURCHASED,
+    LOGGER_EXECUTE_CANCELLED_PAYMENT_ERROR,
     LOGGER_EXECUTE_GATEWAY_ERROR,
     LOGGER_EXECUTE_ORDER_CREATION_FAILED,
     LOGGER_EXECUTE_PAYMENT_ERROR,
@@ -302,6 +304,9 @@ class MobileCoursePurchaseExecutionView(EdxOrderPlacementMixin, APIView):
         except RedundantPaymentNotificationError:
             logger.exception(LOGGER_EXECUTE_REDUNDANT_PAYMENT, request.user.username, basket_id)
             return JsonResponse({'error': COURSE_ALREADY_PAID_ON_DEVICE}, status=409)
+        except UserCancelled as exception:
+            logger.exception(LOGGER_EXECUTE_CANCELLED_PAYMENT_ERROR, request.user.username, basket_id, str(exception))
+            return JsonResponse({'error': ERROR_USER_CANCELLED_PAYMENT}, status=400)
         except PaymentError as exception:
             logger.exception(LOGGER_EXECUTE_PAYMENT_ERROR, request.user.username, basket_id, str(exception))
             return JsonResponse({'error': ERROR_DURING_PAYMENT_HANDLING}, status=400)

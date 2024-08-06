@@ -73,17 +73,25 @@ class TestCreateIosProducts(TestCase):
         course = {
             'key': 'test',
             'name': 'test',
-            'price': '123'
+            'price': 123
         }
         error_msg = create_ios_product(course, self.ios_seat, self.configuration)
         self.assertEqual(error_msg, None)
 
-    # @mock.patch('ecommerce.extensions.iap.api.v1.utils.create_inapp_purchase')
+    def test_error_on_ios_product_price_threshhold(self, _,):
+        course = {
+            'key': 'test',
+            'name': 'test',
+            'price': 1001
+        }
+        error_msg = create_ios_product(course, self.ios_seat, self.configuration)
+        self.assertEqual(error_msg, 'Error: Appstore does not allow price > 1000')
+
     def test_create_ios_product_with_failure(self, _):
         course = {
             'key': 'test',
             'name': 'test',
-            'price': '123'
+            'price': 123
         }
         error_msg = create_ios_product(course, self.ios_seat, self.configuration)
         expected_msg = "[Couldn't create inapp purchase id]  for course [{}] with sku [{}]".format(
@@ -110,7 +118,7 @@ class TestCreateIosProducts(TestCase):
             course = {
                 'key': 'test',
                 'name': 'test',
-                'price': '123'
+                'price': 123
             }
             headers = get_auth_headers(self.configuration)
             create_inapp_purchase(course, 'test.sku', '123', headers)
@@ -149,6 +157,7 @@ class TestCreateIosProducts(TestCase):
                 apply_price_of_inapp_purchase(100, '123', headers)
 
             get_call.return_value.status_code = 200
+            post_call.return_value.status_code = 201
             get_call.return_value.json.return_value = {
                 'data': [
                     {
@@ -159,12 +168,11 @@ class TestCreateIosProducts(TestCase):
                     }
                 ]
             }
-            with self.assertRaises(AppStoreRequestException, msg="Couldn't find nearest low price point"):
-                # Make sure it doesn't select higher price point
-                apply_price_of_inapp_purchase(80, '123', headers)
+            with self.assertRaises(AppStoreRequestException, msg="Couldn't find nearest high price point"):
+                # Make sure it doesn't select lower price point
+                apply_price_of_inapp_purchase(100, '123', headers)
 
-            post_call.return_value.status_code = 201
-            apply_price_of_inapp_purchase(100, '123', headers)
+            apply_price_of_inapp_purchase(98, '123', headers)
             price_url = 'https://api.appstoreconnect.apple.com/v1/inAppPurchasePriceSchedules'
             self.assertEqual(post_call.call_args[0][0], price_url)
             self.assertEqual(post_call.call_args[1]['headers'], headers)

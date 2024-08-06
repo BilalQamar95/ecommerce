@@ -34,6 +34,9 @@ def create_ios_product(course, ios_product, configuration):
     Create in app ios product on connect store.
     return error message in case of failure.
     """
+    if course['price'] > 1000:
+        return 'Error: Appstore does not allow price > 1000'
+
     headers = get_auth_headers(configuration)
     try:
         in_app_purchase_id = get_or_create_inapp_purchase(ios_product, course, configuration, headers)
@@ -188,15 +191,16 @@ def apply_price_of_inapp_purchase(price, in_app_purchase_id, headers):
     if response.status_code != 200:
         raise AppStoreRequestException("Couldn't fetch price points")
 
-    nearest_low_price = nearest_low_price_id = 0
+    # Apple doesn't allow in app price > 1000
+    nearest_high_price = nearest_high_price_id = 1001
     for price_point in response.json()['data']:
         customer_price = float(price_point['attributes']['customerPrice'])
-        if nearest_low_price < customer_price <= price:
-            nearest_low_price = customer_price
-            nearest_low_price_id = price_point['id']
+        if nearest_high_price > customer_price >= price:
+            nearest_high_price = customer_price
+            nearest_high_price_id = price_point['id']
 
-    if not nearest_low_price:
-        raise AppStoreRequestException("Couldn't find nearest low price point")
+    if nearest_high_price == 1001:
+        raise AppStoreRequestException("Couldn't find nearest high price point")
 
     url = APP_STORE_BASE_URL + "/v1/inAppPurchasePriceSchedules"
     data = {
@@ -233,7 +237,7 @@ def apply_price_of_inapp_purchase(price, in_app_purchase_id, headers):
                     "inAppPurchasePricePoint": {
                         "data": {
                             "type": "inAppPurchasePricePoints",
-                            "id": nearest_low_price_id
+                            "id": nearest_high_price_id
                         }
                     }
                 },

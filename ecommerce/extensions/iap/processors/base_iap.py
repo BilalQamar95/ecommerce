@@ -212,6 +212,7 @@ class BaseIAP(BasePaymentProcessor):
                                                                             basket=basket)
 
         meta_data = self._get_metadata(currency_code=currency_code, price=price)
+        original_transaction_id = original_transaction_id or transaction_id
         PaymentProcessorResponseExtension.objects.create(
             processor_response=processor_response, original_transaction_id=original_transaction_id,
             meta_data=meta_data)

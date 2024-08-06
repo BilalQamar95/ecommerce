@@ -12,7 +12,7 @@ from django.test import override_settings
 from django.urls import reverse
 from oauth2client.service_account import ServiceAccountCredentials
 from oscar.apps.order.exceptions import UnableToPlaceOrder
-from oscar.apps.payment.exceptions import GatewayError, PaymentError
+from oscar.apps.payment.exceptions import GatewayError, PaymentError, UserCancelled
 from oscar.core.loading import get_class, get_model
 from oscar.test.factories import BasketFactory
 from rest_framework import status
@@ -38,6 +38,7 @@ from ecommerce.extensions.iap.api.v1.constants import (
     ERROR_ORDER_NOT_FOUND_FOR_REFUND,
     ERROR_REFUND_NOT_COMPLETED,
     ERROR_TRANSACTION_NOT_FOUND_FOR_REFUND,
+    ERROR_USER_CANCELLED_PAYMENT,
     IGNORE_NON_REFUND_NOTIFICATION_FROM_APPLE,
     LOGGER_BASKET_ALREADY_PURCHASED,
     LOGGER_BASKET_CREATED,
@@ -323,6 +324,30 @@ class MobileCoursePurchaseExecutionViewTests(PaymentEventsMixin, TestCase):
                                side_effect=PaymentError('Test Error')) as fake_handle_payment:
             with LogCapture(self.logger_name) as logger:
                 self._assert_response({'error': ERROR_DURING_PAYMENT_HANDLING})
+                self.assertTrue(fake_handle_payment.called)
+
+                logger.check(
+                    (
+                        self.logger_name,
+                        'INFO',
+                        LOGGER_EXECUTE_STARTED % (self.user.username, self.basket.id, self.processor_name)
+                    ),
+                    (
+                        self.logger_name,
+                        'ERROR',
+                        LOGGER_EXECUTE_PAYMENT_ERROR % (self.user.username, self.basket.id,
+                                                        str(fake_handle_payment.side_effect))
+                    ),
+                )
+
+    def test_user_cancelled_payment_error(self):
+        """
+        Verify that user cancelled payment error is returned for Usercancelled exception
+        """
+        with mock.patch.object(MobileCoursePurchaseExecutionView, 'handle_payment',
+                               side_effect=UserCancelled('Test Error')) as fake_handle_payment:
+            with LogCapture(self.logger_name) as logger:
+                self._assert_response({'error': ERROR_USER_CANCELLED_PAYMENT})
                 self.assertTrue(fake_handle_payment.called)
 
                 logger.check(

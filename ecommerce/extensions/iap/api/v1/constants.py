@@ -7,6 +7,7 @@ DISABLE_REDUNDANT_PAYMENT_CHECK_MOBILE_SWITCH_NAME = "disable_redundant_payment_
 ERROR_ALREADY_PURCHASED = "You have already purchased these products"
 ERROR_BASKET_NOT_FOUND = "Basket [{}] not found."
 ERROR_BASKET_ID_NOT_PROVIDED = "Basket id is not provided"
+ERROR_USER_CANCELLED_PAYMENT = "User cancelled this payment."
 ERROR_DURING_IOS_REFUND_EXECUTION = "Could not execute IOS refund."
 ERROR_DURING_ORDER_CREATION = "An error occurred during order creation."
 ERROR_DURING_PAYMENT_HANDLING = "An error occurred during payment handling."
@@ -32,6 +33,8 @@ LOGGER_BASKET_NOT_FOUND = "Basket [%s] not found for user [%s]."
 LOGGER_CHECKOUT_ERROR = "Checkout failed with the error [%s] and status code [%s]."
 LOGGER_EXECUTE_ALREADY_PURCHASED = "Execute payment failed for user [%s] and basket [%s]. " \
                                    "Products already purchased."
+LOGGER_EXECUTE_CANCELLED_PAYMENT_ERROR = "Execute payment failed for user [%s] and basket [%s]. " \
+                                         "Payment error [%s]."
 LOGGER_EXECUTE_GATEWAY_ERROR = "Execute payment validation failed for user [%s] and basket [%s]. Error: [%s]"
 LOGGER_EXECUTE_ORDER_CREATION_FAILED = "Execute payment failed for user [%s] and basket [%s]. " \
                                        "Order Creation failed with error [%s]."
