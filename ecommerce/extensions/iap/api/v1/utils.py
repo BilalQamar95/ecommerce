@@ -282,8 +282,7 @@ def upload_screenshot_of_inapp_purchase(in_app_purchase_id, headers):
     screenshot_id = response['data']['id']
     url = response['data']['attributes']['uploadOperations'][0]['url']
     with staticfiles_storage.open('images/mobile_ios_product_screenshot.png', 'rb') as image:
-        img_headers = headers.copy()
-        img_headers['Content-Type'] = 'image/png'
+        img_headers = {'Content-Type': 'image/png'}
         response = request_connect_store(url, headers=img_headers, data=image.read(), method='put')
 
         if response.status_code != 200:

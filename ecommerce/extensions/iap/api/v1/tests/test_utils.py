@@ -225,8 +225,7 @@ class TestCreateIosProducts(TestCase):
             self.assertEqual(post_call.call_args[1]['headers'], headers)
 
             self.assertEqual(put_call.call_args[0][0], 'https://image-url.com')
-            img_headers = headers.copy()
-            img_headers['Content-Type'] = 'image/png'
+            img_headers = {'Content-Type': 'image/png'}
             self.assertEqual(put_call.call_args[1]['headers'], img_headers)
 
             img_patch_url = 'https://api.appstoreconnect.apple.com/v1/inAppPurchaseAppStoreReviewScreenshots/1234'
