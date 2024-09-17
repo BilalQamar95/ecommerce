@@ -58,7 +58,7 @@ class IOSIAPTests(PaymentProcessorTestCaseMixin, TestCase):
         )
         self.product_sku = self.product.stockrecords.first().partner_sku
         self.RETURN_DATA = {
-            'purchaseToken': 'inapp:test.edx.edx:ios.test.purchased',
+            'purchase_token': 'inapp:test.edx.edx:ios.test.purchased',
             'price': 40.25,
             'currency_code': 'USD',
         }

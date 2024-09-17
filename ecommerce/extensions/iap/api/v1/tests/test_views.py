@@ -300,7 +300,7 @@ class MobileCoursePurchaseExecutionViewTests(PaymentEventsMixin, TestCase):
         self.logger_name = 'ecommerce.extensions.iap.api.v1.views'
 
         self.post_data = {
-            'purchaseToken': 'inapp:org.edx.mobile:android.test.purchased',
+            'purchase_token': 'inapp:org.edx.mobile:android.test.purchased',
             'payment_processor': 'android-iap',
             'basket_id': self.basket.id
         }

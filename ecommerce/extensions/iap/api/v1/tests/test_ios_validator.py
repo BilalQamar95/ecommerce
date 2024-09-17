@@ -28,10 +28,10 @@ class IOSValidatorTests(TestCase):
     """ IOS Validator Tests """
 
     VALID_RECEIPT = {
-        "purchaseToken": VALID_PURCHASE_TOKEN,
+        "purchase_token": VALID_PURCHASE_TOKEN,
     }
     INVALID_RECEIPT = {
-        "purchaseToken": INVALID_PURCHASE_TOKEN,
+        "purchase_token": INVALID_PURCHASE_TOKEN,
     }
 
     def setUp(self):
