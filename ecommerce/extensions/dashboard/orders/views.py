@@ -9,6 +9,7 @@ from oscar.apps.dashboard.orders.views import OrderListView as CoreOrderListView
 from oscar.core.loading import get_model
 
 from ecommerce.extensions.dashboard.views import FilterFieldsMixin
+from ecommerce.extensions.iap.constants import MOBILE_PAYMENT_PROCESSORS
 
 Order = get_model('order', 'Order')
 Partner = get_model('partner', 'Partner')
@@ -62,20 +63,28 @@ class OrderDetailView(CoreOrderDetailView):
     line_actions = ('change_line_statuses', 'create_shipping_event', 'create_payment_event', 'create_refund')
 
     def create_refund(self, request, order, lines, _quantities):  # pylint: disable=unused-argument
-        refund = Refund.create_with_lines(order, lines)
-
-        if refund:
-            data = {
-                'link_start': '<a href="{}" target="_blank">'.format(
-                    reverse('dashboard:refunds-detail', kwargs={'pk': refund.pk})),
-                'link_end': '</a>',
-                'refund_id': refund.pk
-            }
-            message = _('{link_start}Refund #{refund_id}{link_end} created! '
-                        'Click {link_start}here{link_end} to view it.').format(**data)
-            messages.success(request, mark_safe(message))
-        else:
-            message = _('A refund cannot be created for these lines. They may have already been refunded.')
+        if self._is_order_from_mobile(order):
+            message = _("Mobile payment refunds aren't allowed in ecommerce.")
             messages.error(request, message)
 
+        else:
+            refund = Refund.create_with_lines(order, lines)
+
+            if refund:
+                data = {
+                    'link_start': '<a href="{}" target="_blank">'.format(
+                        reverse('dashboard:refunds-detail', kwargs={'pk': refund.pk})),
+                    'link_end': '</a>',
+                    'refund_id': refund.pk
+                }
+                message = _('{link_start}Refund #{refund_id}{link_end} created! '
+                            'Click {link_start}here{link_end} to view it.').format(**data)
+                messages.success(request, mark_safe(message))
+            else:
+                message = _('A refund cannot be created for these lines. They may have already been refunded.')
+                messages.error(request, message)
+
         return self.reload_page()
+
+    def _is_order_from_mobile(self, order):
+        return order.basket.paymentprocessorresponse_set.filter(processor_name__in=MOBILE_PAYMENT_PROCESSORS).exists()

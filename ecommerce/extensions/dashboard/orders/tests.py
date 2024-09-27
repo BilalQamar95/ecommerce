@@ -1,5 +1,5 @@
 
-
+import json
 import os
 from unittest import SkipTest, skipIf
 
@@ -16,6 +16,8 @@ from ecommerce.extensions.dashboard.orders.views import queryset_orders_for_user
 from ecommerce.extensions.dashboard.tests import DashboardViewTestMixin
 from ecommerce.extensions.fulfillment.signals import SHIPPING_EVENT_NAME
 from ecommerce.extensions.fulfillment.status import LINE, ORDER
+from ecommerce.extensions.iap.constants import MOBILE_PAYMENT_PROCESSORS
+from ecommerce.extensions.payment.models import PaymentProcessorResponse
 from ecommerce.extensions.refund.tests.mixins import RefundTestMixin
 from ecommerce.extensions.test.factories import create_order
 from ecommerce.tests.factories import UserFactory
@@ -238,6 +240,24 @@ class OrderDetailViewTests(DashboardViewTestMixin, OrderViewTestsMixin, RefundTe
         # An error message should be displayed.
         self.assert_message_equals(response,
                                    'A refund cannot be created for these lines. They may have already been refunded.',
+                                   MSG.ERROR)
+
+    def test_mobile_refund_error(self):
+        """Verify the view creates a Refund for the Order and selected Lines."""
+        # Create Order and Lines
+        order = self.create_order(user=self.user)
+        PaymentProcessorResponse.objects.create(basket=order.basket,
+                                                transaction_id="test-transaction",
+                                                processor_name=MOBILE_PAYMENT_PROCESSORS[0],
+                                                response=json.dumps({'state': 'approved'}))
+
+        self.assertFalse(order.refunds.exists())
+        # Validate the Refund
+        response = self._request_refund(order)
+        self.assertFalse(order.refunds.exists())
+
+        self.assert_message_equals(response,
+                                   "Mobile payment refunds aren't allowed in ecommerce.",
                                    MSG.ERROR)
 
 
