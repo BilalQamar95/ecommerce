@@ -7,7 +7,7 @@ on:
     branches:
       - master
       - 2u/release
-      
+
 jobs:
   check_migrations:
     name: check migrations mysql8
@@ -33,7 +33,7 @@ jobs:
     - name: Get pip cache dir
       id: pip-cache-dir
       run: |
-        echo "::set-output name=dir::$(pip cache dir)"
+        echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
     - name: Cache pip dependencies
       id: cache-dependencies
       uses: actions/cache@v2
