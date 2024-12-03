@@ -1,5 +1,6 @@
 import logging
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
@@ -14,7 +15,7 @@ from ecommerce.courses.utils import get_course_detail
 logger = logging.getLogger(__name__)
 
 
-class EmailConfirmationRequiredView(TemplateView):
+class EmailConfirmationRequiredView(LoginRequiredMixin, TemplateView):
     template_name = 'edx/email_confirmation_required.html'
 
     def get_context_data(self, **kwargs):
